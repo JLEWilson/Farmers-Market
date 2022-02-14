@@ -1,57 +1,28 @@
 import React from "react";
 import MarketSchedule from "./MarketSchedule";
 import Button from 'react-bootstrap/Button'
+import CreateMarketScheduleForm from "./CreateMarketScheduleForm";
+import { connect } from 'react-redux';
+import PropTypes from 'prop-types';
 
-const marketSchedule = [  
-  {  
-    day: "Sunday",
-    location: "Lents International",
-    hours: "9:00am - 2:00pm",
-    booth: "4A"
-  },
-  {  
-    day: "Monday",
-    location: "Pioneer Courthouse Square",
-    hours: "10:00am - 2:00pm",
-    booth: "7C"
-  },
-  {  
-    day: "Tuesday",
-    location: "Hillsboro",
-    hours: "5:00pm - 8:30pm",
-    booth: "1F"
-  },
-  {  
-    day: "Wednesday",
-    location: "Shemanski Park",
-    hours: "10:00am - 2:00pm",
-    booth: "3E"
-  },
-  {  
-    day: "Thursday",
-    location: "Northwest Portland",
-    hours: "2:00pm - 6:00pm",
-    booth: "6D"
-  },
-  {  
-    day: "Saturday",
-    location: "Beaverton",
-    hours: "10:00am - 1:30pm",
-    booth: "9G"
-  }
-];
 
 class MarketScheduleControl extends React.Component{
 
   constructor(props){
     super(props);
     this.state = {
+      formVisibleOnPage: false,
       dayNumber: 0
     };
   }
-  
-  handleClick = () => {
-    if(this.state.dayNumber === marketSchedule.length-1){
+  handleChangeToDay1 = () => {
+    this.setState(prevState => ({
+      dayNumber: 0,
+      formVisibleOnPage: false
+    }));
+  }
+  handleChangeToNextDay = () => {
+    if(this.state.dayNumber === Object.keys(this.props.mainMarketScheduleList).length -1){
       this.setState(prevState => ({
         dayNumber: 0
       }));
@@ -61,29 +32,74 @@ class MarketScheduleControl extends React.Component{
       }));
     }
   }
-
+  handleFormPage = () => {
+    this.setState(prevState => ({
+      formVisibleOnPage : !prevState.formVisibleOnPage
+    }));
+  }
+  handleAddingNewMarketScheduleToList = (newMarketSchedule) => {
+    const { dispatch } = this.props;
+    const { id, day, location, booth, hours } = newMarketSchedule;
+    const action = {
+      type: 'ADD_MARKETDAY',
+      id: id,
+      day: day,
+      location: location,
+      booth: booth,
+      hours: hours
+    }
+    dispatch(action);
+    //Maybe set state like set to day 1
+  }
   render(){
-    let currentlyVisibleState = <MarketSchedule
-        day={marketSchedule[this.state.dayNumber].day}
-        location={marketSchedule[this.state.dayNumber].location}
-        hours={marketSchedule[this.state.dayNumber].hours}
-        booth={marketSchedule[this.state.dayNumber].booth}
-    />;
     let buttonText = null;
-    if(this.state.dayNumber === marketSchedule.length-1){
-      buttonText = marketSchedule[0].day;
+    let buttonFunc = null;
+    let formButton = null;
+    let currentlyVisibleState = null;
+    if(this.state.formVisibleOnPage){
+      buttonText = "Never mind";
+      buttonFunc = this.handleChangeToDay1;
+      currentlyVisibleState = <CreateMarketScheduleForm resetDay={this.handleChangeToDay1}
+      submitDay={this.handleAddingNewMarketScheduleToList}/>
+    } else 
+    {
+      const listValues = Object.values(this.props.mainMarketScheduleList);
+      currentlyVisibleState = <MarketSchedule
+        day={listValues[this.state.dayNumber].day}
+        location={listValues[this.state.dayNumber].location}
+        hours={listValues[this.state.dayNumber].hours}
+        booth={listValues[this.state.dayNumber].booth}
+    />;
+    buttonFunc = this.handleChangeToNextDay;
+    formButton = <Button variant="secondary" className="buttons" onClick={this.handleFormPage}>New Market Day</Button>
+    if(this.state.dayNumber === listValues.length -1){
+      buttonText = listValues[0].day;
     } else {
-      buttonText = marketSchedule[this.state.dayNumber + 1].day;
+      buttonText = listValues[this.state.dayNumber + 1].day;
+    }
     }
     return(
       <React.Fragment>
         {currentlyVisibleState}
         <div className="buttons-div">
-          <Button variant="secondary" className="buttons" onClick={this.handleClick}>{buttonText}</Button>
+          <Button variant="secondary" className="buttons" onClick={buttonFunc}>{buttonText}</Button> 
+          {formButton}
         </div>
       </React.Fragment>
     );
   }
 } 
+
+MarketScheduleControl.propTypes = {
+  mainMarketScheduleList: PropTypes.object
+}
+
+const mapStateToProps = state => {
+  return {
+    mainMarketScheduleList: state
+  }
+}
+
+MarketScheduleControl = connect(mapStateToProps)(MarketScheduleControl)
 
 export default MarketScheduleControl;

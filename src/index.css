@@ -57,6 +57,12 @@ code {
     height: 20em;
   }
 }
+@media (min-width: 1380px){
+  .header-photo{
+    display: block;
+    margin: 0 auto;
+  }
+}
 @media (max-width: 768px) {
   .food-card{
     height: 30em;
